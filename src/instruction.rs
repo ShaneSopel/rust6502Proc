@@ -99,14 +99,19 @@ enum reg_type
     RT_SP // Stack Pointer
 }
 
-type addr = addr_mode;
-type inst = instruction_type;
-
 struct instruction
 {
     // instruction type
-    inst type;
+    reg1: reg_type,
+    reg2: reg_type,
 
 
+
+
+
+}
+
+impl instruction
+{
 
 }
