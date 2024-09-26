@@ -1,6 +1,9 @@
+use std::{fmt::Debug, ops::Add};
+
 
 // Address modes 
-enum addr_mode
+#[derive(Debug)]
+enum AddrMode
 {
     A, // accumulator
     ABS, // absolute
@@ -11,16 +14,22 @@ enum addr_mode
     IND, // indirect
     IND_X, // x-indexed, indirect
     IND_Y, // indirect, y-indexed
+    JAM, // JAM
     REL, // relative
     ZPG, //zero page
     ZPG_X, // zeropage, x-indexed
     ZPG_Y // zeropage, y-indexed
 }
 
-enum instruction_type
+#[derive(Debug)]
+enum InstructionType
 {
     ADC, // add with carry
+    ANC, // AND Op + Set C as ASL
     AND, // and (with accumlator)
+    ANE, // OR X + And oper
+    ALR, // and oper + LSR
+    ARR, // and oper + ROR
     ASL, // arithmetic shift left
     BCC, // branch on carry clear
     BCS, // branch on carry set
@@ -46,6 +55,7 @@ enum instruction_type
     INC, // increment
     INX, // increment x
     INY, // increment y
+    JAM, // JAM
     JMP, // jump
     JSR, // jump subroutine
     LDA, // load accumulator
@@ -58,17 +68,26 @@ enum instruction_type
     PHP, // push processor status (SR)
     PLA, // pull accumulator
     PLP, // pull processor status (SR)
+    RRA, // ROR Oper + ADC oper
+    RLA, // ROL oper + AND oper
     ROL, // rotate left
     ROR, // rotate right
     RTI, // return from interrupt
     RTS, // return from subroutine
+    SAX, // (AXS, AAX)
     SBC, // subtract with carry
     SEC, // set carry
     SED, // set decimal
     SEI, // set interrupt disable
+    SHA, // (AHX, AXA)
+    SHX, // (A11, SXA, XAS)
+    SHY, // (A11, SYA, SAY)
+    SLO, // 
+    SRE, // 
     STA, // store accumulator
     STX, // store x
     STY, // store y
+    TAS, // (XAS, SHS)
     TAX, // transfer accumulator x
     TAY, // transfer accumulator y
     TSX, // transfer stack pointer to x
@@ -76,8 +95,9 @@ enum instruction_type
     TXS, // transfer x to stack pointer
     TYA // transfer y to accumulator
 }
-
-enum cond_type
+/* 
+#[derive(Debug)]
+enum CondType
 {
     CT_N, // Negative Flag (N) 
     CT_V, // Overflow Flag (V)
@@ -89,29 +109,232 @@ enum cond_type
     CT_C // Carry
 }
 
-enum reg_type
+#[derive(Debug)]
+enum RegType
 {
     RT_PC, // Program Counter Registers
     RT_AC, // Accumulator Register
     RT_X, // Index Register X
     RT_Y, // Index Register Y
     RT_SR, // Status Register
-    RT_SP // Stack Pointer
-}
+    RT_SP, // Stack Pointer
+    RT_NONE
+}*/
 
-struct instruction
+#[derive(Debug)]
+pub struct Instruction
 {
     // instruction type
-    reg1: reg_type,
-    reg2: reg_type,
+    InstType: InstructionType,
 
-
-
-
-
+    // addrs mode
+    mode: AddrMode,
+    
+    //CPU Cycles
+    cycles: u8
 }
 
-impl instruction
-{
 
-}
+//Look Up Table
+pub const INSTRUCTIONS: [Instruction; 0x100] =
+[
+    // 0x00 - 0xF0
+    Instruction {InstType: InstructionType::BRK, mode: AddrMode::IMP, cycles: 7},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::IND_X, cycles: 6},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::SLO, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::ASL, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::SLO, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::PHP, mode: AddrMode::IMP, cycles: 3},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::ASL, mode: AddrMode::A, cycles: 2},
+    Instruction {InstType: InstructionType::ANC, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::ASL, mode: AddrMode::ABS, cycles: 6},
+    Instruction {InstType: InstructionType::SLO, mode: AddrMode::ABS, cycles: 6},
+
+    // 0x10
+    Instruction {InstType: InstructionType::BPL, mode: AddrMode::REL, cycles: 2},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::IND_Y, cycles: 5},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::SLO, mode: AddrMode::IND_Y, cycles: 8},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::ASL, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::SLO, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::CLC, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::ABS_Y, cycles: 4},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::SLO, mode: AddrMode::ABS_Y, cycles: 7},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::ORA, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::ASL, mode: AddrMode::ABS_X, cycles: 7},
+    Instruction {InstType: InstructionType::SLO, mode: AddrMode::ABS_X, cycles: 7},
+
+    // 0x20
+    Instruction {InstType: InstructionType::JSR, mode: AddrMode::ABS, cycles: 3},
+    Instruction {InstType: InstructionType::AND, mode: AddrMode::IND_X, cycles: 6},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::RLA, mode: AddrMode::IND_X, cycles: 8},
+    Instruction {InstType: InstructionType::BIT, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::AND, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::ROL, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::RLA, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::PLP, mode: AddrMode::IMP, cycles: 4},
+    Instruction {InstType: InstructionType::AND, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::ROL, mode: AddrMode::A, cycles: 2},
+    Instruction {InstType: InstructionType::ANC, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::BIT, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::AND, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::ROL, mode: AddrMode::ABS, cycles: 6},
+    Instruction {InstType: InstructionType::RLA, mode: AddrMode::ABS, cycles: 6},
+
+    // 0x30
+    Instruction {InstType: InstructionType::BMI, mode: AddrMode::REL, cycles: 2},
+    Instruction {InstType: InstructionType::AND, mode: AddrMode::IND_Y, cycles: 5},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::RLA, mode: AddrMode::IND_Y, cycles: 8},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::AND, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::ROL, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::RLA, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::SEC, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::AND, mode:AddrMode::ABS_Y, cycles: 4},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::RLA, mode: AddrMode::ABS_Y, cycles: 7},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::AND, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::ROL, mode: AddrMode::ABS_X, cycles: 7},
+    Instruction {InstType: InstructionType::RLA, mode: AddrMode::ABS_X, cycles: 7},
+
+    // 0x40
+    Instruction {InstType: InstructionType::RTI, mode: AddrMode::IMP, cycles: 6},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::IND_X, cycles: 6},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycle: 0},
+    Instruction {InstType: InstructionType::SRE, mode: AddrMode::IND_X, cycles: 8},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG, cycles: 4},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::LSR, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::SRE, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::PHA, mode: AddrMode::IMP, cycles: 3},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::LSR, mode: AddrMode::A, cycles: 2},
+    Instruction {InstType: InstructionType::ALR, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::JMP, mode: AddrMode::ABS, cycles: 3},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::LSR, mode: AddrMode::ABS, cycles: 6},
+    Instruction {InstType: InstructionType::SRE, mode: AddrMode::ABS, cycles: 6},
+
+    // 0x50
+    Instruction {InstType: InstructionType::BVC, mode: AddrMode::REL, cycles: 2},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::IND_Y, cycles: 5},
+    Instruction {InstType: InstructionType::JAM. mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::SRE, mode: AddrMode::IND_Y, cycles: 8},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::LSR, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::SRE, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::CLI, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::ABS_Y, cycles: 4},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::SRE, mode: AddrMode::ABS_Y, cycles: 7},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::EOR, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::LSR, mode: AddrMode::ABS_X, cycles: 7},
+    Instruction {InstType: InstructionType::SRE, mode: AddrMode::ABS_X, cycles: 7},
+
+    // 0x60
+    Instruction {InstType: InstructionType::RTS, mode: AddrMode::IMP, cycles: 6},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::IND_X, cycles: 6},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::RRA, mode: AddrMode::IND_X, cycles: 8},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG, cycles: 4},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::ROR, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::RRA, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::PLA, mode: AddrMode::IMP, cycles: 4},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::ROR, mode: AddrMode::A, cycles: 2},
+    Instruction {InstType: InstructionType::ARR, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::JMP, mode: AddrMode::IND, cycles: 5},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::ROR, mode: AddrMode::ABS, cycles: 6},
+    Instruction {InstType: InstructionType::RRA, mode: AddrMode::ABS, cycles: 6},
+
+    // 0x70
+    Instruction {InstType: InstructionType::BVS, mode: AddrMode::REL, cycles: 2},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::IND_Y, cycles: 5},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::RRA, mode: AddrMode::IND_Y, cycles: 8},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::ROR, mode: AddrMode::ZPG_X, cycles: 5},
+    Instruction {InstType: InstructionType::RRA, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::SEI, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::ABS_Y, cycles: 4},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles:2},
+    Instruction {InstType: InstructionType::RRA, mode: AddrMode::ABS_Y, cycles: 7},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::ADC, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::ROR, mode: AddrMode::ABS_X, cycles: 7},
+    Instruction {InstType: InstructionType::RRA, mode: AddrMode::ABS_X, cycles: 7},
+
+    // 0x80
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::STA, mode: AddrMode::IND_X, cycles: 6},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::SAX, mode: AddrMode::IND_X, cycles: 6},
+    Instruction {InstType: InstructionType::STY, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::STA, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::STX, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::SAX, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::DEY, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::TXA, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::ANE, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::STY, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::STA, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::STX, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::SAX, mode: AddrMode::ABS, cycles: 4},
+
+    // 0x90
+    Instruction {InstType: InstructionType::BCC, mode: AddrMode::REL, cycles: 2},
+    Instruction {InstType: InstructionType::STA, mode: AddrMode::IND_Y, cycles: 6},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::SHA, mode: AddrMode::IND_Y, cycles: 6},
+    Instruction {InstType: InstructionType::STY, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::STA, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::STX, mode: AddrMode::ZPG_Y, cycles: 4},
+    Instruction {InstType: InstructionType::SAX, mode: AddrMode::ZPG_Y, cycles: 4},
+    Instruction {InstType: InstructionType::TYA, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::STA, mode: AddrMode::ABS_Y, cycles: 5},
+    Instruction {InstType: InstructionType::TXS, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::TAS, mode: AddrMode::ABS_Y, cycles: 5},
+    Instruction {InstType: InstructionType::SHY, mode: AddrMode::ABS_X, cycles: 5},
+    Instruction {InstType: InstructionType::STA, mode: AddrMode::ABS_X, cycles: 5},
+    Instruction {InstType: InstructionType::SHX, mode: AddrMode::ABS_Y, cycles: 5},
+    Instruction {InstType: InstructionType::SHA, mode: AddrMode::ABS_Y, cycles: 5},
+
+    // 0xA0
+    Instruction {InstType: InstructionType::LDY, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::LDA, mode: AddrMode::IND_X, cycles: 6},
+
+    // 0xB0
+
+    // 0xC0
+
+    // 0xD0
+
+    // 0xE0
+
+    // 0xF0
+
+
+    
+
+
+
+];
