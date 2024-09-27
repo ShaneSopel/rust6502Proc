@@ -3,7 +3,7 @@ use std::{fmt::Debug, ops::Add};
 
 // Address modes 
 #[derive(Debug)]
-enum AddrMode
+pub enum AddrMode
 {
     A, // accumulator
     ABS, // absolute
@@ -22,7 +22,7 @@ enum AddrMode
 }
 
 #[derive(Debug)]
-enum InstructionType
+pub enum InstructionType
 {
     ADC, // add with carry
     ANC, // AND Op + Set C as ASL
@@ -56,6 +56,7 @@ enum InstructionType
     INC, // increment
     INX, // increment x
     INY, // increment y
+    ISC, // INC oper + SBC Oper
     JAM, // JAM
     JMP, // jump
     JSR, // jump subroutine
@@ -98,9 +99,11 @@ enum InstructionType
     TSX, // transfer stack pointer to x
     TXA, // transfer x to accumulator
     TXS, // transfer x to stack pointer
-    TYA // transfer y to accumulator
+    TYA,// transfer y to accumulator
+    USBC // SBC oper + NOP
 }
-/* 
+/* Not sure I need this yet, or I can implement it in the CPU_PROC Section
+// The conditions are based on the Instruction so maybe I can implement it in there???
 #[derive(Debug)]
 enum CondType
 {
@@ -130,13 +133,13 @@ enum RegType
 pub struct Instruction
 {
     // instruction type
-    InstType: InstructionType,
+    pub InstType: InstructionType,
 
     // addrs mode
-    mode: AddrMode,
+   pub  mode: AddrMode,
     
     //CPU Cycles
-    cycles: u8
+   pub  cycles: u8
 }
 
 
@@ -218,7 +221,7 @@ pub const INSTRUCTIONS: [Instruction; 0x100] =
     // 0x40
     Instruction {InstType: InstructionType::RTI, mode: AddrMode::IMP, cycles: 6},
     Instruction {InstType: InstructionType::EOR, mode: AddrMode::IND_X, cycles: 6},
-    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycle: 0},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
     Instruction {InstType: InstructionType::SRE, mode: AddrMode::IND_X, cycles: 8},
     Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG, cycles: 4},
     Instruction {InstType: InstructionType::EOR, mode: AddrMode::ZPG, cycles: 3},
@@ -236,7 +239,7 @@ pub const INSTRUCTIONS: [Instruction; 0x100] =
     // 0x50
     Instruction {InstType: InstructionType::BVC, mode: AddrMode::REL, cycles: 2},
     Instruction {InstType: InstructionType::EOR, mode: AddrMode::IND_Y, cycles: 5},
-    Instruction {InstType: InstructionType::JAM. mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
     Instruction {InstType: InstructionType::SRE, mode: AddrMode::IND_Y, cycles: 8},
     Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG_X, cycles: 4},
     Instruction {InstType: InstructionType::EOR, mode: AddrMode::ZPG_X, cycles: 4},
@@ -345,7 +348,7 @@ pub const INSTRUCTIONS: [Instruction; 0x100] =
     Instruction {InstType: InstructionType::BCS, mode: AddrMode::REL, cycles: 2},
     Instruction {InstType: InstructionType::LDA, mode: AddrMode::IND_Y, cycles: 5},
     Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
-    Instruction {InstType: InstructionType::LAX, mode: AddrMode::IND_Y, cycles 5},
+    Instruction {InstType: InstructionType::LAX, mode: AddrMode::IND_Y, cycles: 5},
     Instruction {InstType: InstructionType::LDY, mode: AddrMode::ZPG_X, cycles: 4},
     Instruction {InstType: InstructionType::LDA, mode: AddrMode::ZPG_X, cycles: 4},
     Instruction {InstType: InstructionType::LDX, mode: AddrMode::ZPG, cycles: 4},
@@ -378,27 +381,57 @@ pub const INSTRUCTIONS: [Instruction; 0x100] =
     Instruction {InstType: InstructionType::DCP, mode: AddrMode::ABS, cycles: 6},
 
     // 0xD0
-
+    Instruction {InstType: InstructionType::BNE, mode: AddrMode::REL, cycles: 2},
+    Instruction {InstType: InstructionType::CMP, mode: AddrMode::IND_Y, cycles: 5},
     Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
-    // D3
     Instruction {InstType: InstructionType::DCP, mode: AddrMode::IND_Y, cycles: 8},
-
-    // D7
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::CMP, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::DEC, mode: AddrMode::ZPG_X, cycles: 6},
     Instruction {InstType: InstructionType::DCP, mode: AddrMode::ZPG_X, cycles: 6},
-
-    // DB
+    Instruction {InstType: InstructionType::CLD, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::CMP, mode: AddrMode::ABS_Y, cycles: 4},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles: 2},
     Instruction {InstType: InstructionType::DCP, mode: AddrMode::ABS_Y, cycles: 7},
-
-    // DF
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::CMP, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::DEC, mode: AddrMode::ABS_X, cycles: 7},
     Instruction {InstType: InstructionType::DCP, mode: AddrMode::ABS_X, cycles: 7},
 
     // 0xE0
-
-    // 0xF0
-
-
+    Instruction {InstType: InstructionType::CPX, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::IND_X, cycles: 6},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::ISC, mode: AddrMode::IND_X, cycles: 8},
+    Instruction {InstType: InstructionType::CPX, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::ZPG, cycles: 3},
+    Instruction {InstType: InstructionType::INC, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::ISC, mode: AddrMode::ZPG, cycles: 5},
+    Instruction {InstType: InstructionType::INX, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::ABS_Y, cycles: 4},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::USBC, mode: AddrMode::IMM, cycles: 2},
+    Instruction {InstType: InstructionType::CPX, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::ABS, cycles: 4},
+    Instruction {InstType: InstructionType::INC, mode: AddrMode::ABS , cycles: 6},
+    Instruction {InstType: InstructionType::ISC, mode: AddrMode::ABS, cycles: 6},
     
-
-
+    // 0xF0
+    Instruction {InstType: InstructionType::BEQ, mode: AddrMode::REL, cycles: 2},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::IND_Y, cycles: 5},
+    Instruction {InstType: InstructionType::JAM, mode: AddrMode::JAM, cycles: 0},
+    Instruction {InstType: InstructionType::ISC, mode: AddrMode::IND_Y, cycles: 8},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::ZPG_X, cycles: 4},
+    Instruction {InstType: InstructionType::INC, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::ISC, mode: AddrMode::ZPG_X, cycles: 6},
+    Instruction {InstType: InstructionType::SED, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::ABS_Y, cycles: 4},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::IMP, cycles: 2},
+    Instruction {InstType: InstructionType::ISC, mode: AddrMode::ABS_Y, cycles: 7},
+    Instruction {InstType: InstructionType::NOP, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::SBC, mode: AddrMode::ABS_X, cycles: 4},
+    Instruction {InstType: InstructionType::INC, mode: AddrMode::ABS_X, cycles: 7},
+    Instruction {InstType: InstructionType::ISC, mode: AddrMode::ABS_X, cycles: 7}
 
 ];
