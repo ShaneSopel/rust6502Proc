@@ -1,16 +1,10 @@
-pub mod instruction;
-use crate::instruction::INSTRUCTIONS;
+
+pub mod cpu;
+#[path = "cpuproc.rs"] pub mod cpuproc;
+#[path = "instruction.rs"] pub mod instruction; 
+
 
 fn main() {
     println!("Hello, world!");
-
-    for n in 1..256
-    {
-        print!("{:?} \n", INSTRUCTIONS[n]);
-    }
-
-    //INSTRUCTIONS[1].mode;
-
-    print!("{:?} \n", INSTRUCTIONS[1].mode);
-    
+    print!("{:?} \n", cpu::process_instruction(0));
 }

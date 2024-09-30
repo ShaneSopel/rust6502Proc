@@ -1,369 +1,507 @@
-pub mod instruction;
-use crate::instruction::INSTRUCTIONS;
+#[path = "instruction.rs"] pub mod instruction;
+
+use crate::cpuproc::instruction as inst;
 
 // Addr mode functions.
 fn accumulator_addr() -> u8
 {
-
+    println!("this is accumulator and 13");
+    return 1;
 }
 
 fn absolute_addr() -> u8
 {
+    return 1;
 
 }
 
 fn absolute_x_addr() -> u8
 {
-
+    return 1;
 }
 
 fn absolute_y_addr() -> u8
 {
+    return 1;
 
 }
 
 fn immediate_addr() -> u8
 {
+    println!("this is immediate");
+    return 22;
 
 }
 
 fn implied_addr() -> u8
 {
+    println!("this is implied");
+    return 23;
 
 }
 
 fn indirect_addr() -> u8
 {
+    return 1;
 
 }
 
 fn indirect_x_addr() -> u8
 {
+    return 1;
 
 }
 
 fn indirect_y_addr() -> u8
 {
+    return 1;
 
 }
 
 fn jam_addr() -> u8
 {
+    return 1;
 
 }
 
 fn relative_addr() -> u8
 {
+    return 1;
 
 }
 
 fn zero_page_addr() -> u8
 {
+    return 1;
 
 }
 
 fn zero_page_x_addr() -> u8
 {
+    return 1;
+
+}
+
+fn zero_page_y_addr() -> u8
+{
+    return 1;
 
 }
 
 // Instruction Type
-fn ADC() -> u8
+fn adc() -> u8
 {
+    println!("this is adc and 13");
+    return 24;
+}
+
+fn and() -> u8
+{
+    return 1;
 
 }
 
-fn AND() -> u8
+fn asl() -> u8
 {
+    return 1;
 
 }
 
-fn ASL() -> u8
+fn bcc() -> u8
 {
+    return 1;
 
 }
 
-fn BCC() -> u8
+fn bcs() -> u8
 {
+    return 1;
 
 }
 
-fn BCS() -> u8
+fn beq() -> u8
 {
+    return 1;
 
 }
 
-fn BEQ() -> u8
+fn bit() -> u8
 {
+    return 1;
 
 }
 
-fn BIT() -> u8
+fn brk() -> u8
 {
+    println!("this is brk and 20");
+    return 20;
+}
+
+fn bpl() -> u8
+{
+    return 1;
 
 }
 
-fn BRK() -> u8
+fn bmi() -> u8
 {
+    return 1;
 
 }
 
-fn BPL() -> u8
+fn bne() -> u8
 {
+    return 1;
 
 }
 
-fn BMI() -> u8
+fn bvc() -> u8
 {
+    return 1;
 
 }
 
-fn BNE() -> u8
+fn bvs() -> u8
 {
+    return 1;
 
 }
 
-fn BVC() -> u8
+fn clc() -> u8
 {
+    return 1;
 
 }
 
-fn BVS() -> u8
+fn cld() -> u8
 {
+    return 1;
+}
+
+fn cli() -> u8
+{
+    return 1;
 
 }
 
-fn CLC() -> u8
+fn clv() -> u8
 {
+    return 1;
 
 }
 
-fn CLD() -> u8
+fn cmp() -> u8
 {
+    return 1;
 
 }
 
-fn CLI() -> u8
+fn cpx() -> u8
 {
+    return 1;
 
 }
 
-fn CLV() -> u8
+fn cpy() -> u8
 {
+    return 1;
 
 }
 
-fn CMP() -> u8
+fn dec() -> u8
 {
+    return 1;
 
 }
 
-fn CPX() -> u8
+fn dex() -> u8
 {
+    return 1;
 
 }
 
-fn CPY() -> u8
+fn dey() -> u8
 {
-
+    return 1;
 }
 
-fn DEC() -> u8
+fn eor() -> u8
 {
-
+    return 1;
 }
 
-fn DEX() -> u8
+fn inc() -> u8
 {
-
+    return 1;
 }
 
-fn DEY() -> u8
+fn inx() -> u8
 {
-
+    return 1;
 }
 
-fn EOR() -> u8
+fn iny() -> u8
 {
-
+    return 1;
 }
 
-fn INC() -> u8
+fn jmp() -> u8
 {
-
+    return 1;
 }
 
-fn INX() -> u8
+fn jsr() -> u8
 {
-
+    return 1;
 }
 
-fn INY() -> u8
-{
 
+fn lda() -> u8
+{
+    return 1;
 }
 
-fn JSR() -> u8
+fn ldx() -> u8
 {
-
+    return 1;
 }
 
-fn LDA() -> u8
+fn ldy() -> u8
 {
-
+    return 1;
 }
 
-fn LDX() -> u8
+fn lsr() -> u8
 {
-
+    return 1;
 }
 
-fn LDY() -> u8
+fn ora() -> u8
 {
-
-}
-
-fn LSR() -> u8
-{
-
-}
-
-fn NOP() -> u8
-{
-
-}
-
-fn ORA() -> u8
-{
-
+    return 1;
 } 
 
-fn PHA() -> u8
+fn pla() -> u8
 {
+    return 1;
+}
+
+fn pha() -> u8
+{
+    return 1;
+}
+
+fn php() -> u8
+{
+    return 1;
+}
+
+fn plp() -> u8
+{
+    return 1;
+}
+
+fn rol() -> u8
+{
+    return 1;
+}
+
+fn ror() -> u8
+{
+    return 1;
+}
+
+fn rti() -> u8
+{
+    return 1;
+}
+
+fn rts() -> u8
+{
+    return 1;
 
 }
 
-fn PHP() -> u8
+fn sbc() -> u8
 {
+    return 1;
+}
+
+fn sec() -> u8
+{
+    return 1;
+}
+
+fn sed() -> u8
+{
+    return 1;
+}
+
+fn sei() -> u8
+{
+    return 1;
+}
+
+fn sta() -> u8
+{
+    return 1;
+}
+
+fn stx() -> u8
+{
+    return 1;
+}
+
+fn sty() -> u8
+{
+    return 1;
+}
+
+fn tax() -> u8
+{
+    return 1;
+}
+
+fn tay() -> u8
+{
+    return 1;
+}
+
+fn tsx() -> u8
+{
+    return 1;
+}
+
+fn txa() -> u8
+{
+    return 1;
 
 }
 
-fn PLP() -> u8
+fn txs() -> u8
 {
+    return 1;
 
 }
 
-fn ROL() -> u8
+fn tya() -> u8
 {
+    return 1;
 
 }
 
-fn ROR() -> u8
+fn illegal_opcode() -> u8
 {
-
-}
-
-fn RTI() -> u8
-{
-
-}
-
-fn RTS() -> u8
-{
-
-}
-
-fn SBC() -> u8
-{
-
-}
-
-fn SEC() -> u8
-{
-
-}
-
-fn SED() -> u8
-{
-
-}
-
-fn SEI() -> u8
-{
-
-}
-
-fn STA() -> u8
-{
-
-}
-
-fn STX() -> u8
-{
-
-}
-
-fn STY() -> u8
-{
-
-}
-
-fn TAX() -> u8
-{
-
-}
-
-fn TAY() -> u8
-{
-
-}
-
-fn TSX() -> u8
-{
-
-}
-
-fn TXA() -> u8
-{
-
-}
-
-fn TXS() -> u8
-{
-
-}
-
-fn TYA() -> u8
-{
-
+    return 1;
 }
 
 // configure the processor instruction we need for the CPU.
-pub const PROCESSORS: [InstType] =
-[
-    instruction::InstructionType::BRK = break_interrupt();
-
-
-
-
-
-]
-
-// return the processor intstruction type
-PROCESSORS getProc (instruction::InstructionType type) -> bool
+pub fn match_process(inst_type: &inst::InstructionType) -> u8
 {
-    return PROCESSORS [type];
+    match inst_type
+    {
+        inst::InstructionType::ADC => adc(), //legal
+        inst::InstructionType::ANC => illegal_opcode(),
+        inst::InstructionType::AND => and(),
+        inst::InstructionType::ANE => illegal_opcode(),
+        inst::InstructionType::ALR => illegal_opcode(), //illegal
+        inst::InstructionType::ARR => illegal_opcode(),
+        inst::InstructionType::ASL => asl(),
+        inst::InstructionType::BCC => bcc(),
+        inst::InstructionType::BCS => bcs(),
+        inst::InstructionType::BEQ => beq(),
+        inst::InstructionType::BIT => bit(),
+        inst::InstructionType::BMI => bmi(),
+        inst::InstructionType::BNE => bne(),
+        inst::InstructionType::BPL => bpl(),
+        inst::InstructionType::BRK => brk(),
+        inst::InstructionType::BVC => bvc(),
+        inst::InstructionType::BVS => bvs(),
+        inst::InstructionType::CLC => clc(),
+        inst::InstructionType::CLD => cld(),
+        inst::InstructionType::CLI => cli(),
+        inst::InstructionType::CLV => clv(),
+        inst::InstructionType::CMP => cmp(),
+        inst::InstructionType::CPX => cpx(),
+        inst::InstructionType::CPY => cpy(),
+        inst::InstructionType::DCP => illegal_opcode(),
+        inst::InstructionType::DEC => dec(),
+        inst::InstructionType::DEX => dex(),
+        inst::InstructionType::DEY => dey(),
+        inst::InstructionType::EOR => eor(),
+        inst::InstructionType::INC => inc(),
+        inst::InstructionType::INX => inx(),
+        inst::InstructionType::INY => iny(),
+        inst::InstructionType::ISC => illegal_opcode(),
+        inst::InstructionType::JAM => illegal_opcode(),
+        inst::InstructionType::JMP => jmp(),
+        inst::InstructionType::JSR => jsr(),
+        inst::InstructionType::LAS => illegal_opcode(),
+        inst::InstructionType::LAX => illegal_opcode(),
+        inst::InstructionType::LDA => lda(),
+        inst::InstructionType::LDX => ldx(),
+        inst::InstructionType::LDY => ldy(),
+        inst::InstructionType::LSR => lsr(),
+        inst::InstructionType::LXA => illegal_opcode(),
+        inst::InstructionType::NOP => illegal_opcode(),
+        inst::InstructionType::ORA => ora(),
+        inst::InstructionType::PHA => pha(),
+        inst::InstructionType::PHP => php(),
+        inst::InstructionType::PLA => pla(),
+        inst::InstructionType::PLP => plp(),
+        inst::InstructionType::RLA => illegal_opcode(),
+        inst::InstructionType::ROL => rol(),
+        inst::InstructionType::ROR => ror(),
+        inst::InstructionType::RRA => illegal_opcode(),
+        inst::InstructionType::RTI => rti(),
+        inst::InstructionType::RTS => rts(),
+        inst::InstructionType::SAX => illegal_opcode(),
+        inst::InstructionType::SBC => sbc(),
+        inst::InstructionType::SBX => illegal_opcode(),
+        inst::InstructionType::SEC => sec(),
+        inst::InstructionType::SED => sed(),
+        inst::InstructionType::SEI => sei(),
+        inst::InstructionType::SHA => illegal_opcode(),
+        inst::InstructionType::SHX => illegal_opcode(),
+        inst::InstructionType::SHY => illegal_opcode(),
+        inst::InstructionType::SLO => illegal_opcode(),
+        inst::InstructionType::SRE => illegal_opcode(),
+        inst::InstructionType::STA => sta(),
+        inst::InstructionType::STX => stx(),
+        inst::InstructionType::STY => sty(),
+        inst::InstructionType::TAS => illegal_opcode(),
+        inst::InstructionType::TAX => tax(),
+        inst::InstructionType::TAY => tay(),
+        inst::InstructionType::TSX => tsx(),
+        inst::InstructionType::TXA => txa(),
+        inst::InstructionType::TXS => txs(),
+        inst::InstructionType::TYA => tya(),
+        inst::InstructionType::USBC => illegal_opcode()
+    }
 }
 
 
 // link addr mode function with the enum
-pub const ADDRMODE: [AddrMode] =
-[
 
-]
-
-// return the addrmode
-ADDRMODE getAddrMode (Instruction::AddrMode addr) -> bool
+// configure the processor instruction we need for the CPU.
+pub fn match_addr(addr_type: &inst::AddrMode) -> u8
 {
-    RETURN ADDRMODE: [addr];
+    match addr_type
+    {
+       inst::AddrMode::A => accumulator_addr(),
+       inst::AddrMode::ABS => absolute_addr(),
+       inst::AddrMode::ABS_X => absolute_x_addr(),
+       inst::AddrMode::ABS_Y => absolute_y_addr(),
+       inst::AddrMode::IMM => immediate_addr(),
+       inst::AddrMode::IMP => implied_addr(),
+       inst::AddrMode::IND => indirect_addr(),
+       inst::AddrMode::IND_X => indirect_x_addr(),
+       inst::AddrMode::IND_Y => indirect_y_addr(),
+       inst::AddrMode::JAM => jam_addr(),
+       inst::AddrMode::REL => relative_addr(),
+       inst::AddrMode::ZPG => zero_page_addr(),
+       inst::AddrMode::ZPG_X => zero_page_x_addr(),
+       inst::AddrMode::ZPG_Y => zero_page_y_addr()
+    }
+    
 }

@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::Add};
+use std::{fmt::Debug};
 
 
 // Address modes 
@@ -102,32 +102,6 @@ pub enum InstructionType
     TYA,// transfer y to accumulator
     USBC // SBC oper + NOP
 }
-/* Not sure I need this yet, or I can implement it in the CPU_PROC Section
-// The conditions are based on the Instruction so maybe I can implement it in there???
-#[derive(Debug)]
-enum CondType
-{
-    CT_N, // Negative Flag (N) 
-    CT_V, // Overflow Flag (V)
-    CT_NONE, // Ignore
-    CT_B, // Break
-    CT_D, // Decimal (use BCD for arithmetics)
-    CT_I, // Interrupt (IQR disable)
-    CT_Z, // Zero
-    CT_C // Carry
-}
-
-#[derive(Debug)]
-enum RegType
-{
-    RT_PC, // Program Counter Registers
-    RT_AC, // Accumulator Register
-    RT_X, // Index Register X
-    RT_Y, // Index Register Y
-    RT_SR, // Status Register
-    RT_SP, // Stack Pointer
-    RT_NONE
-}*/
 
 #[derive(Debug)]
 pub struct Instruction
