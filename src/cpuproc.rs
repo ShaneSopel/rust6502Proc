@@ -2,6 +2,64 @@
 
 use crate::cpuproc::instruction as inst;
 
+#[derive(Debug)]
+enum CondType
+{
+    CT_N, // Negative Flag (N) 
+    CT_V, // Overflow Flag (V)
+    CT_NONE, // Ignore
+    CT_B, // Break
+    CT_D, // Decimal (use BCD for arithmetics)
+    CT_I, // Interrupt (IQR disable)
+    CT_Z, // Zero
+    CT_C // Carry
+}
+
+/*#[derive(Debug)]
+pub struct RegType
+{
+    RT_PC: u8, // Program Counter Registers
+    RT_AC: u8, // Accumulator Register
+    RT_X: u8, // Index Register X
+    RT_Y: u8, // Index Register Y
+    RT_SR: u8, // Status Register
+    RT_SP: u8, // Stack Pointer
+    RT_NONE: u8
+}*/
+
+pub struct EmulationVariables
+{
+    fetch: u8,
+    temp: u16,
+    addr_abs: u16,
+    addr_rel: u16,
+    opcode: u8,
+    cycles: u8,
+    clock_count: u32,
+
+    rt_pc: u8, // Program Counter Registers
+    rt_ac: u8, // Accumulator Register
+    rt_x: u8, // Index Register X
+    rt_y: u8, // Index Register Y
+    rt_sr: u8, // Status Register
+    rt_sp: u8, // Stack Pointer
+    rt_none: u8
+}
+
+impl EmulationVariables
+{
+    fn emu_init(&mut self)
+    {
+        self.fetch = 0x00;
+        self.temp = 0x000;
+        self.addr_abs = 0x0000;
+        self.addr_rel = 0x0000;
+        self.opcode = 0x00;
+        self.cycles = 0;
+        self.clock_count = 0;
+    }
+}
+
 // Addr mode functions.
 fn accumulator_addr() -> u8
 {
@@ -392,7 +450,7 @@ fn tya() -> u8
 
 fn illegal_opcode() -> u8
 {
-    return 1;
+    return 0;
 }
 
 // configure the processor instruction we need for the CPU.
@@ -506,7 +564,8 @@ pub fn match_addr(addr_type: &inst::AddrMode) -> u8
     
 }
 
-pub fn inst_cycles(cycles: i32) -> i32
+pub fn inst_cycles(cycles: u8) -> u8
 {
-    return cycles;
+    let cyc = cycles;
+    return cyc;
 }
