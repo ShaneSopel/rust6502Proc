@@ -38,6 +38,7 @@ pub fn process_instruction(opcode: u8) -> bool
 
     let instruction = match_process(&opcode_instruction.InstType);
     let mode = match_addr(&opcode_instruction.mode);
+    let cycle = inst_cycles (&opcode_instruction.cycles);
     
 
     print!("instruction: {:?} \n", opcode_instruction);

@@ -505,3 +505,8 @@ pub fn match_addr(addr_type: &inst::AddrMode) -> u8
     }
     
 }
+
+pub fn inst_cycles(cycles: i32) -> i32
+{
+    return cycles;
+}
