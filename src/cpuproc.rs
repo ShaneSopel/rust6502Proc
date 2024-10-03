@@ -2,115 +2,77 @@
 
 use crate::cpuproc::instruction as inst;
 
-#[derive(Debug)]
-enum CondType
+pub struct Cpu_Execution
 {
-    CT_N, // Negative Flag (N) 
-    CT_V, // Overflow Flag (V)
-    CT_NONE, // Ignore
-    CT_B, // Break
-    CT_D, // Decimal (use BCD for arithmetics)
-    CT_I, // Interrupt (IQR disable)
-    CT_Z, // Zero
-    CT_C // Carry
-}
+    pub fetch: u8,
+    pub temp: u16,
+    pub addr_abs: u16,
+    pub addr_rel: u16,
+    pub opcode: u8,
+    pub cycles: u8,
+    pub clock_count: u32,
 
-/*#[derive(Debug)]
-pub struct RegType
-{
-    RT_PC: u8, // Program Counter Registers
-    RT_AC: u8, // Accumulator Register
-    RT_X: u8, // Index Register X
-    RT_Y: u8, // Index Register Y
-    RT_SR: u8, // Status Register
-    RT_SP: u8, // Stack Pointer
-    RT_NONE: u8
-}*/
-
-pub struct EmulationVariables
-{
-    fetch: u8,
-    temp: u16,
-    addr_abs: u16,
-    addr_rel: u16,
-    opcode: u8,
-    cycles: u8,
-    clock_count: u32,
-
-    rt_pc: u8, // Program Counter Registers
-    rt_ac: u8, // Accumulator Register
-    rt_x: u8, // Index Register X
-    rt_y: u8, // Index Register Y
-    rt_sr: u8, // Status Register
-    rt_sp: u8, // Stack Pointer
-    rt_none: u8
-}
-
-impl EmulationVariables
-{
-    fn emu_init(&mut self)
-    {
-        self.fetch = 0x00;
-        self.temp = 0x000;
-        self.addr_abs = 0x0000;
-        self.addr_rel = 0x0000;
-        self.opcode = 0x00;
-        self.cycles = 0;
-        self.clock_count = 0;
-    }
+    pub RT_PC: u8, // Program Counter Registers
+    pub RT_AC: u8, // Accumulator Register
+    pub RT_X: u8, // Index Register X
+    pub RT_Y: u8, // Index Register Y
+    pub RT_SR: u8, // Status Register
+    pub RT_SP: u8, // Stack Pointer
+    pub RT_NONE: u8
 }
 
 // Addr mode functions.
-fn accumulator_addr() -> u8
+fn accumulator_addr(con: &mut Cpu_Execution) -> u8
 {
+    
     println!("this is accumulator and 13");
     return 1;
 }
 
-fn absolute_addr() -> u8
+fn absolute_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
 }
 
-fn absolute_x_addr() -> u8
+fn absolute_x_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 }
 
-fn absolute_y_addr() -> u8
+fn absolute_y_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
 }
 
-fn immediate_addr() -> u8
+fn immediate_addr(con: &mut Cpu_Execution) -> u8
 {
+    
     println!("this is immediate");
     return 22;
 
 }
 
-fn implied_addr() -> u8
+fn implied_addr(con: &mut Cpu_Execution) -> u8
 {
-    println!("this is implied");
-    return 23;
-
+    con.fetch = con.RT_AC;
+    return 0;
 }
 
-fn indirect_addr() -> u8
-{
-    return 1;
-
-}
-
-fn indirect_x_addr() -> u8
+fn indirect_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
 }
 
-fn indirect_y_addr() -> u8
+fn indirect_x_addr(con: &mut Cpu_Execution) -> u8
+{
+    return 1;
+
+}
+
+fn indirect_y_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
@@ -119,28 +81,27 @@ fn indirect_y_addr() -> u8
 fn jam_addr() -> u8
 {
     return 1;
-
 }
 
-fn relative_addr() -> u8
+fn relative_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
 }
 
-fn zero_page_addr() -> u8
+fn zero_page_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
 }
 
-fn zero_page_x_addr() -> u8
+fn zero_page_x_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
 }
 
-fn zero_page_y_addr() -> u8
+fn zero_page_y_addr(con: &mut Cpu_Execution) -> u8
 {
     return 1;
 
@@ -189,10 +150,11 @@ fn bit() -> u8
 
 }
 
-fn brk() -> u8
+fn brk(con: &mut Cpu_Execution) -> u8
 {
     println!("this is brk and 20");
-    return 20;
+    con.RT_PC += 1;
+    return 23;
 }
 
 fn bpl() -> u8
@@ -454,7 +416,7 @@ fn illegal_opcode() -> u8
 }
 
 // configure the processor instruction we need for the CPU.
-pub fn match_process(inst_type: &inst::InstructionType) -> u8
+pub fn match_process(inst_type: &inst::InstructionType, con: &mut Cpu_Execution) -> u8
 {
     match inst_type
     {
@@ -472,7 +434,7 @@ pub fn match_process(inst_type: &inst::InstructionType) -> u8
         inst::InstructionType::BMI => bmi(),
         inst::InstructionType::BNE => bne(),
         inst::InstructionType::BPL => bpl(),
-        inst::InstructionType::BRK => brk(),
+        inst::InstructionType::BRK => brk(con),
         inst::InstructionType::BVC => bvc(),
         inst::InstructionType::BVS => bvs(),
         inst::InstructionType::CLC => clc(),
@@ -542,24 +504,24 @@ pub fn match_process(inst_type: &inst::InstructionType) -> u8
 // link addr mode function with the enum
 
 // configure the processor instruction we need for the CPU.
-pub fn match_addr(addr_type: &inst::AddrMode) -> u8
+pub fn match_addr(addr_type: &inst::AddrMode, con: &mut Cpu_Execution) -> u8
 {
     match addr_type
     {
-       inst::AddrMode::A => accumulator_addr(),
-       inst::AddrMode::ABS => absolute_addr(),
-       inst::AddrMode::ABS_X => absolute_x_addr(),
-       inst::AddrMode::ABS_Y => absolute_y_addr(),
-       inst::AddrMode::IMM => immediate_addr(),
-       inst::AddrMode::IMP => implied_addr(),
-       inst::AddrMode::IND => indirect_addr(),
-       inst::AddrMode::IND_X => indirect_x_addr(),
-       inst::AddrMode::IND_Y => indirect_y_addr(),
+       inst::AddrMode::A => accumulator_addr(con),
+       inst::AddrMode::ABS => absolute_addr(con),
+       inst::AddrMode::ABS_X => absolute_x_addr(con),
+       inst::AddrMode::ABS_Y => absolute_y_addr(con),
+       inst::AddrMode::IMM => immediate_addr(con),
+       inst::AddrMode::IMP => implied_addr(con),
+       inst::AddrMode::IND => indirect_addr(con),
+       inst::AddrMode::IND_X => indirect_x_addr(con),
+       inst::AddrMode::IND_Y => indirect_y_addr(con),
        inst::AddrMode::JAM => jam_addr(),
-       inst::AddrMode::REL => relative_addr(),
-       inst::AddrMode::ZPG => zero_page_addr(),
-       inst::AddrMode::ZPG_X => zero_page_x_addr(),
-       inst::AddrMode::ZPG_Y => zero_page_y_addr()
+       inst::AddrMode::REL => relative_addr(con),
+       inst::AddrMode::ZPG => zero_page_addr(con),
+       inst::AddrMode::ZPG_X => zero_page_x_addr(con),
+       inst::AddrMode::ZPG_Y => zero_page_y_addr(con)
     }
     
 }
