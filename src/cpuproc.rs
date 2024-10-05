@@ -1,5 +1,7 @@
 #[path = "instruction.rs"] pub mod instruction;
 
+#[path = "cpu.rs"] pub mod cpu;
+
 use crate::cpuproc::instruction as inst;
 
 pub struct CpuExecution
@@ -22,28 +24,64 @@ pub struct CpuExecution
 }
 
 // Addr mode functions.
-fn accumulator_addr(con: &mut CpuExecution) -> u8
-{
-    
-    println!("this is accumulator and 13");
-    return 1;
-}
+//fn accumulator_addr(con: &mut CpuExecution) -> u8
+//{
+//    println!("this is accumulator and 13");
+//    return 1;
+//}
 
 fn absolute_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let lo : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
 
+    let hi : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
+
+    con.addr_abs = (hi << 8) | lo;
+
+    return 0;
 }
 
 fn absolute_x_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let lo : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
+    let hi : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
+
+    con.addr_abs = (hi << 8) | lo;
+    con.addr_abs += con.rt_x as u16;
+
+    if (con.addr_abs & 0xFF00) != (hi << 8)
+    {
+        return 1;
+    }
+    else 
+    {
+        return 0;
+    }
+
 }
 
 fn absolute_y_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let lo : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
+    let hi : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
 
+    con.addr_abs = (hi << 8) | lo;
+    con.addr_abs += con.rt_y as u16;
+
+    if (con.addr_abs & 0xFF00) != (hi << 8)
+    {
+        return 1;
+    }
+    else 
+    {
+        return 0;
+    }
 }
 
 fn immediate_addr(con: &mut CpuExecution) -> u8
@@ -61,22 +99,22 @@ fn implied_addr(con: &mut CpuExecution) -> u8
 
 fn indirect_addr(con: &mut CpuExecution) -> u8
 {
-    let lo : u16 = cpu_read(con.rt_pc);
+    let lo : u16 = cpu::cpu_read(con.rt_pc as u16);
     con.rt_pc = con.rt_pc + 1;
 
-    let hi : u16 = cpu_read(con.rt_pc);
+    let hi : u16 = cpu::cpu_read(con.rt_pc as u16);
     con.rt_pc = con.rt_pc + 1;
 
     let ptr : u16 = (hi << 8) | lo;
 
-    if (lo == 0x00FF)
+    if lo == 0x00FF
     {
-        con.addr_abs = (cpu_read(ptr & 0xFF00) << 8) | cpu_read(ptr + 0);
+        con.addr_abs = (cpu::cpu_read(ptr & 0xFF00) << 8) | cpu::cpu_read(ptr + 0);
 
     }
     else 
     {
-        con.addr_abs = (cpu_read(ptr + 1) << 8) | cpu_read(ptr + 0);
+        con.addr_abs = (cpu::cpu_read(ptr + 1) << 8) | cpu::cpu_read(ptr + 0);
     }
 
     return 0;
@@ -85,13 +123,37 @@ fn indirect_addr(con: &mut CpuExecution) -> u8
 
 fn indirect_x_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let t : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
 
+    let lo : u16 = cpu::cpu_read((t+(con.rt_x as u16))&0x00FF);
+    let hi : u16 = cpu::cpu_read((t+(con.rt_x as u16 )+1)&0x00FF);
+
+    con.addr_abs = (hi << 8) | lo;
+
+    return 0;
 }
 
 fn indirect_y_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let t : u16 = cpu::cpu_read(con.rt_pc as u16);
+    con.rt_pc = con.rt_pc + 1;
+
+    let lo : u16 = cpu::cpu_read((t &0x00FF) as u16);
+    let hi : u16 = cpu::cpu_read((t+1)&0x00FF);
+
+    con.addr_abs = (hi << 8) | lo;
+    con.addr_abs = con.addr_abs + (con.rt_y as u16);
+
+    if (con.addr_abs & 0xFF00) != (hi << 8)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+  
 
 }
 
@@ -102,19 +164,19 @@ fn jam_addr() -> u8
 
 fn relative_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_rel = cpu_read(con.rt_pc);
+    con.addr_rel = cpu::cpu_read(con.rt_pc as u16);
     con.rt_pc = con.rt_pc + 1;
-    if (con.addr_rel & 0x80)
+
+    if (con.addr_rel & 0x80) == 1
     {
         con.addr_rel |= 0xFF00;
     }
     return 0;
-
 }
 
 fn zero_page_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_abs = cpu_read(con.rt_pc);
+    con.addr_abs = cpu::cpu_read(con.rt_pc as u16);
     con.rt_pc =  con.rt_pc + 1;
     con.addr_abs &= 0x00FF;
     return 0;
@@ -122,7 +184,7 @@ fn zero_page_addr(con: &mut CpuExecution) -> u8
 
 fn zero_page_x_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_abs = cpu_read(con.rt_pc + con.rt_x);
+    con.addr_abs = cpu::cpu_read((con.rt_pc + con.rt_x) as u16);
     con.rt_pc =  con.rt_pc + 1;
     con.addr_abs &= 0x00FF;
     return 0;
@@ -130,7 +192,7 @@ fn zero_page_x_addr(con: &mut CpuExecution) -> u8
 
 fn zero_page_y_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_abs = cpu_read(con.rt_pc + con.rt_y);
+    con.addr_abs = cpu::cpu_read((con.rt_pc + con.rt_y) as u16);
     con.rt_pc =  con.rt_pc + 1;
     con.addr_abs &= 0x00FF;
     return 0;
@@ -538,7 +600,7 @@ pub fn match_addr(addr_type: &inst::AddrMode, con: &mut CpuExecution) -> u8
 {
     match addr_type
     {
-       inst::AddrMode::A => accumulator_addr(con),
+       inst::AddrMode::A => implied_addr(con),
        inst::AddrMode::ABS => absolute_addr(con),
        inst::AddrMode::AbsX => absolute_x_addr(con),
        inst::AddrMode::AbsY => absolute_y_addr(con),

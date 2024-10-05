@@ -39,11 +39,14 @@ pub fn cpu_init() -> SystemState
     return SystemState::CpuInit;
 }
 
-pub fn cpu_read() -> u8
+
+pub fn cpu_read(addr: u16) -> u16
 {
-
-
-    return 1;
+    if addr >= 0x0000 && addr <= 0xFFFF
+    {
+        return addr;
+    }
+    return 0x00;
 }
 
 pub fn cpu_write() 
