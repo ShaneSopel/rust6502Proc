@@ -48,10 +48,9 @@ fn absolute_y_addr(con: &mut CpuExecution) -> u8
 
 fn immediate_addr(con: &mut CpuExecution) -> u8
 {
-    
     println!("this is immediate");
-    return 22;
-
+    con.addr_abs = (con.rt_pc + 1) as u16;
+    return 0;
 }
 
 fn implied_addr(con: &mut CpuExecution) -> u8
@@ -62,7 +61,25 @@ fn implied_addr(con: &mut CpuExecution) -> u8
 
 fn indirect_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let lo : u16 = cpu_read(con.rt_pc);
+    con.rt_pc = con.rt_pc + 1;
+
+    let hi : u16 = cpu_read(con.rt_pc);
+    con.rt_pc = con.rt_pc + 1;
+
+    let ptr : u16 = (hi << 8) | lo;
+
+    if (lo == 0x00FF)
+    {
+        con.addr_abs = (cpu_read(ptr & 0xFF00) << 8) | cpu_read(ptr + 0);
+
+    }
+    else 
+    {
+        con.addr_abs = (cpu_read(ptr + 1) << 8) | cpu_read(ptr + 0);
+    }
+
+    return 0;
 
 }
 
@@ -85,25 +102,38 @@ fn jam_addr() -> u8
 
 fn relative_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.addr_rel = cpu_read(con.rt_pc);
+    con.rt_pc = con.rt_pc + 1;
+    if (con.addr_rel & 0x80)
+    {
+        con.addr_rel |= 0xFF00;
+    }
+    return 0;
 
 }
 
 fn zero_page_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
-
+    con.addr_abs = cpu_read(con.rt_pc);
+    con.rt_pc =  con.rt_pc + 1;
+    con.addr_abs &= 0x00FF;
+    return 0;
 }
 
 fn zero_page_x_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
-
+    con.addr_abs = cpu_read(con.rt_pc + con.rt_x);
+    con.rt_pc =  con.rt_pc + 1;
+    con.addr_abs &= 0x00FF;
+    return 0;
 }
 
 fn zero_page_y_addr(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.addr_abs = cpu_read(con.rt_pc + con.rt_y);
+    con.rt_pc =  con.rt_pc + 1;
+    con.addr_abs &= 0x00FF;
+    return 0;
 
 }
 

@@ -39,6 +39,18 @@ pub fn cpu_init() -> SystemState
     return SystemState::CpuInit;
 }
 
+pub fn cpu_read() -> u8
+{
+
+
+    return 1;
+}
+
+pub fn cpu_write() 
+{
+
+}
+
 
 
 
