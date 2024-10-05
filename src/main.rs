@@ -1,4 +1,4 @@
-use cpuproc::Cpu_Execution;
+use cpuproc::CpuExecution;
 
 
 pub mod cpu;
@@ -9,7 +9,7 @@ pub mod cpu;
 
 fn main() {
 
-    let mut con: Cpu_Execution = Cpu_Execution
+    let mut con: CpuExecution = CpuExecution
     {
         fetch: 0x00,
         temp: 0x0000,
@@ -19,13 +19,13 @@ fn main() {
         cycles: 0,
         clock_count: 0,
 
-        RT_PC: 0x00, // Program Counter Registers
-        RT_AC: 0x00, // Accumulator Register
-        RT_X: 0x00, // Index Register X
-        RT_Y: 0x00, // Index Register Y
-        RT_SR: 0x00, // Status Register
-        RT_SP: 0x00, // Stack Pointer
-        RT_NONE: 0x00
+        rt_pc: 0x00, // Program Counter Registers
+        rt_ac: 0x00, // Accumulator Register
+        rt_x: 0x00, // Index Register X
+        rt_y: 0x00, // Index Register Y
+        rt_sr: 0x00, // Status Register
+        rt_sp: 0x00, // Stack Pointer
+        rt_none: 0x00
 
     };
 
