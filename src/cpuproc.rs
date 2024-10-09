@@ -217,17 +217,34 @@ fn adc(con: &mut CpuExecution) -> u8
 {
     let temp = con.rt_ac + con.fetch + get_flag(CondType::CtC, con);
 
-    let zval : bool = (temp & 0x00FF) == 0; 
+    let zval : bool = (temp & 0x00FF); 
     set_flag(CondType::CtZ,  zval, con);
 
+    let nval : bool = (temp & 0x80);
+    set_flag(CondType::CtN, nval, con);
+        
+    let cval : bool = (temp > 255);
+    set_flag(CondType::CtC, cval, con);
+
+    let vval : bool = !((con.rt_ac ^ con.fetch) & (con.rt_ac ^ temp));
+    set_flag(CondType::CtV, vval, con);
+
+    con.rt_ac = temp & 0x00FF;
     
-    return 0;
+    return 1;
 }
 
 fn and() -> u8
 {
-    return 1;
+    con.rt_ac = con.rt_ac & con.fetch;
 
+    let zval : bool = (con.rt_ac == 0x00);
+    set_flag(CondType::CtC, zval, con);
+
+    let nval : bool = (con.rt_ac  & 0x80);
+    set_flag(CondType::CtN, nval, con);
+
+    return 1;
 }
 
 fn asl() -> u8
