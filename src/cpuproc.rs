@@ -166,8 +166,6 @@ fn indirect_y_addr(con: &mut CpuExecution) -> u8
     {
         return 0;
     }
-  
-
 }
 
 fn jam_addr() -> u8
@@ -217,16 +215,16 @@ fn adc(con: &mut CpuExecution) -> u8
 {
     let temp = con.rt_ac + con.fetch + get_flag(CondType::CtC, con);
 
-    let zval : bool = (temp & 0x00FF); 
+    let zval : bool = (temp & 0x00FF) == 1; 
     set_flag(CondType::CtZ,  zval, con);
 
-    let nval : bool = (temp & 0x80);
+    let nval : bool = (temp & 0x80) == 1;
     set_flag(CondType::CtN, nval, con);
         
-    let cval : bool = (temp > 255);
+    let cval : bool = temp > 255;
     set_flag(CondType::CtC, cval, con);
 
-    let vval : bool = !((con.rt_ac ^ con.fetch) & (con.rt_ac ^ temp));
+    let vval : bool = !((con.rt_ac ^ con.fetch) & (con.rt_ac ^ temp)) == 1;
     set_flag(CondType::CtV, vval, con);
 
     con.rt_ac = temp & 0x00FF;
@@ -234,46 +232,106 @@ fn adc(con: &mut CpuExecution) -> u8
     return 1;
 }
 
-fn and() -> u8
+fn and(con: &mut CpuExecution) -> u8
 {
     con.rt_ac = con.rt_ac & con.fetch;
 
-    let zval : bool = (con.rt_ac == 0x00);
+    let zval : bool = con.rt_ac == 0x00;
     set_flag(CondType::CtC, zval, con);
 
-    let nval : bool = (con.rt_ac  & 0x80);
+    let nval : bool = (con.rt_ac & 0x80) == 1;
     set_flag(CondType::CtN, nval, con);
 
     return 1;
 }
 
-fn asl() -> u8
+fn asl(con: &mut CpuExecution) -> u8
 {
+    let temp =  get_flag(CondType::CtC, con);
+
+    let zval : bool = con.rt_ac == 0x00FF;
+    set_flag(CondType::CtC, zval, con);
+
+    let nval : bool = (con.rt_ac  & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+
+    let cval : bool = (temp & 0xFF00) > 0;
+    set_flag(CondType::CtC, cval, con);
+
+    // add more logic
+
     return 1;
 
 }
 
-fn bcc() -> u8
+fn bcc(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    if get_flag(CondType::CtC, con) == 0
+    {
+        con.rt_pc = con.rt_pc +1;
+        con.addr_abs = con.rt_pc as u16 + con.addr_rel as u16;
+
+        if(con.addr_abs & 0xFF00) != (con.rt_pc as u16 & 0xFF00)
+        {
+            con.rt_pc = con.rt_pc +1;
+        }
+
+        con.rt_pc = con.addr_abs;
+    }
+
+    return 0;
+}
+
+fn bcs(con: &mut CpuExecution) -> u8
+{
+    if get_flag(CondType::CtC, con) == 1
+    {
+        con.rt_pc = con.rt_pc + 1;
+        con.addr_abs = con.rt_pc as u16 + con.addr_rel as u16;
+
+        if(con.addr_abs & 0xFF00) != (con.rt_pc as u16 & 0xFF00)
+        {
+            con.rt_pc = con.rt_pc +1;
+        }
+
+        con.rt_pc = con.addr_abs;
+
+    }
+    return 0;
+}
+
+fn beq(con: &mut CpuExecution) -> u8
+{
+    if get_flag(CondType::CtZ, con) == 1
+    {
+        con.rt_pc = con.rt_pc + 1;
+        con.addr_abs =  con.rt_pc as u16 + con.addr_rel as u16;
+
+        if(con.addr_abs & 0xFF00) != (con.rt_pc as u16 & 0xFF00)
+        {
+            con.rt_pc = con.rt_pc +1;
+        }
+
+        con.rt_pc = con.addr_abs;
+    }
+    return 0;
 
 }
 
-fn bcs() -> u8
+fn bit(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let temp : u8 = con.rt_ac & con.fetch;
 
-}
+    let zval : bool = temp & 0x00FF == 0x00;
+    set_flag(CondType::CtZ, zval, con);
 
-fn beq() -> u8
-{
-    return 1;
+    let vval : bool = con.fetch & (1 << 6) == 1;
+    set_flag(CondType::CtV, vval, con);
 
-}
+    let nval : bool = con.fetch & (1 << 7) == 1;
+    set_flag(CondType::CtN, nval, con);
 
-fn bit() -> u8
-{
-    return 1;
+    return 0;
 
 }
 
