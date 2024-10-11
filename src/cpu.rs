@@ -39,7 +39,6 @@ pub fn cpu_init() -> SystemState
     return SystemState::CpuInit;
 }
 
-
 pub fn cpu_read(addr: u16) -> u16
 {
     if addr >= 0x0000 && addr <= 0xFFFF
@@ -49,8 +48,15 @@ pub fn cpu_read(addr: u16) -> u16
     return 0x00;
 }
 
-pub fn cpu_write() 
+pub fn cpu_write(addr: u16, data: u8) -> u8
 {
+    if addr >= 0x0000 && addr <= 0xFFFF
+    {
+        return data;
+    }
+    else  {
+        return 0;
+    }
 
 }
 

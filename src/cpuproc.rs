@@ -1,19 +1,24 @@
 #[path = "instruction.rs"] pub mod instruction;
 #[path = "cpu.rs"] pub mod cpu;
 
+use cpu::{cpu_read, cpu_write};
+
 use crate::cpuproc::instruction as inst;
 use crate::{cpu::SystemState};
 
 #[derive(Debug)]
 pub enum CondType
 {
+    // negative flag indicates negative value using bit position 7.
     CtN    , // (1 << 7)  Negative Flag (N) 
     CtV    , // (1 << 6)  Overflow Flag (V)
     CtNone , // (1 << 5)  Ignore
     CtB    , // (1 << 4)  Break
     CtD    , // (1 << 3)  Decimal (use BCD for arithmetics)
     CtI    , // (1 << 2)  Interrupt (IQR disable)
+    //zero flag is used to indicate all zero bits
     CtZ    , // (1 << 1)  Zero
+    //used to carry over overflow in arithmetic operations.
     CtC    , // (1 << 0)  Carry
 }
 
@@ -27,7 +32,7 @@ pub struct CpuExecution
     pub cycles: u8,
     pub clock_count: u32,
 
-    pub rt_pc: u8, // Program Counter Registers
+    pub rt_pc: u16, // Program Counter Registers
     pub rt_ac: u8, // Accumulator Register
     pub rt_x: u8, // Index Register X
     pub rt_y: u8, // Index Register Y
@@ -136,7 +141,7 @@ fn indirect_addr(con: &mut CpuExecution) -> u8
 
 fn indirect_x_addr(con: &mut CpuExecution) -> u8
 {
-    let t : u16 = cpu::cpu_read(con.rt_pc as u16);
+    let t : u16 = cpu::cpu_read(con.rt_pc);
     con.rt_pc = con.rt_pc + 1;
 
     let lo : u16 = cpu::cpu_read((t+(con.rt_x as u16))&0x00FF);
@@ -149,10 +154,10 @@ fn indirect_x_addr(con: &mut CpuExecution) -> u8
 
 fn indirect_y_addr(con: &mut CpuExecution) -> u8
 {
-    let t : u16 = cpu::cpu_read(con.rt_pc as u16);
+    let t : u16 = cpu::cpu_read(con.rt_pc);
     con.rt_pc = con.rt_pc + 1;
 
-    let lo : u16 = cpu::cpu_read((t &0x00FF) as u16);
+    let lo : u16 = cpu::cpu_read(t &0x00FF);
     let hi : u16 = cpu::cpu_read((t+1)&0x00FF);
 
     con.addr_abs = (hi << 8) | lo;
@@ -175,7 +180,7 @@ fn jam_addr() -> u8
 
 fn relative_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_rel = cpu::cpu_read(con.rt_pc as u16);
+    con.addr_rel = cpu::cpu_read(con.rt_pc);
     con.rt_pc = con.rt_pc + 1;
 
     if (con.addr_rel & 0x80) == 1
@@ -187,7 +192,7 @@ fn relative_addr(con: &mut CpuExecution) -> u8
 
 fn zero_page_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_abs = cpu::cpu_read(con.rt_pc as u16);
+    con.addr_abs = cpu::cpu_read(con.rt_pc);
     con.rt_pc =  con.rt_pc + 1;
     con.addr_abs &= 0x00FF;
     return 0;
@@ -195,7 +200,7 @@ fn zero_page_addr(con: &mut CpuExecution) -> u8
 
 fn zero_page_x_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_abs = cpu::cpu_read((con.rt_pc + con.rt_x) as u16);
+    con.addr_abs = cpu::cpu_read(con.rt_pc as u16 + con.rt_x as u16);
     con.rt_pc =  con.rt_pc + 1;
     con.addr_abs &= 0x00FF;
     return 0;
@@ -203,7 +208,7 @@ fn zero_page_x_addr(con: &mut CpuExecution) -> u8
 
 fn zero_page_y_addr(con: &mut CpuExecution) -> u8
 {
-    con.addr_abs = cpu::cpu_read((con.rt_pc + con.rt_y) as u16);
+    con.addr_abs = cpu::cpu_read(con.rt_pc as u16 + con.rt_y as u16);
     con.rt_pc =  con.rt_pc + 1;
     con.addr_abs &= 0x00FF;
     return 0;
@@ -268,12 +273,12 @@ fn bcc(con: &mut CpuExecution) -> u8
 {
     if get_flag(CondType::CtC, con) == 0
     {
-        con.rt_pc = con.rt_pc +1;
-        con.addr_abs = con.rt_pc as u16 + con.addr_rel as u16;
+        con.cycles = con.cycles +1;
+        con.addr_abs = con.rt_pc + con.addr_rel;
 
-        if(con.addr_abs & 0xFF00) != (con.rt_pc as u16 & 0xFF00)
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
         {
-            con.rt_pc = con.rt_pc +1;
+            con.cycles = con.cycles +1;
         }
 
         con.rt_pc = con.addr_abs;
@@ -286,12 +291,12 @@ fn bcs(con: &mut CpuExecution) -> u8
 {
     if get_flag(CondType::CtC, con) == 1
     {
-        con.rt_pc = con.rt_pc + 1;
-        con.addr_abs = con.rt_pc as u16 + con.addr_rel as u16;
+        con.cycles = con.cycles + 1;
+        con.addr_abs = con.rt_pc + con.addr_rel;
 
-        if(con.addr_abs & 0xFF00) != (con.rt_pc as u16 & 0xFF00)
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
         {
-            con.rt_pc = con.rt_pc +1;
+            con.cycles = con.cycles +1;
         }
 
         con.rt_pc = con.addr_abs;
@@ -304,12 +309,12 @@ fn beq(con: &mut CpuExecution) -> u8
 {
     if get_flag(CondType::CtZ, con) == 1
     {
-        con.rt_pc = con.rt_pc + 1;
-        con.addr_abs =  con.rt_pc as u16 + con.addr_rel as u16;
+        con.cycles= con.cycles + 1;
+        con.addr_abs =  con.rt_pc + con.addr_rel;
 
-        if(con.addr_abs & 0xFF00) != (con.rt_pc as u16 & 0xFF00)
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
         {
-            con.rt_pc = con.rt_pc +1;
+            con.cycles = con.cycles + 1;
         }
 
         con.rt_pc = con.addr_abs;
@@ -332,19 +337,45 @@ fn bit(con: &mut CpuExecution) -> u8
     set_flag(CondType::CtN, nval, con);
 
     return 0;
-
 }
 
 fn brk(con: &mut CpuExecution) -> u8
 {
-    println!("this is brk and 20");
-    con.rt_pc += 1;
-    return 23;
+    con.rt_pc = con.rt_pc + 1;
+
+    
+    set_flag(CondType::CtI, true, con);
+    cpu_write(0x0100 + con.rt_sp as u16, ((con.rt_pc >> 8) & 0x00FF) as u8);
+    con.rt_sp = con.rt_sp - 1;
+    cpu_write(0x0100 + con.rt_sp as u16, (con.rt_pc & 0x00FF) as u8);
+    con.rt_sp = con.rt_sp - 1;
+
+    set_flag(CondType::CtB,true, con);
+    cpu_write(0x100 + con.rt_sp as u16, con.rt_sr);
+    con.rt_sp = con.rt_sp - 1;
+    set_flag(CondType::CtB, false, con);
+
+    con.rt_pc = cpu_read(0xFFFE) | (cpu_read(0xFFFF) << 8);
+
+    return 0;
 }
 
-fn bpl() -> u8
+fn bpl(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    if get_flag(CondType::CtN, con) == 0
+    {
+        con.cycles = con.cycles + 1;
+        con.addr_abs =  con.rt_pc + con.addr_rel;
+
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
+        {
+            con.cycles = con.cycles +1;
+        }
+
+        con.rt_pc = con.addr_abs;
+
+    }
+    return 0;
 
 }
 
@@ -638,20 +669,20 @@ pub fn match_process(inst_type: &inst::InstructionType, con: &mut CpuExecution) 
 {
     match inst_type
     {
-        inst::InstructionType::ADC => adc(), //legal
+        inst::InstructionType::ADC => adc(con), //legal
         inst::InstructionType::ANC => illegal_opcode(),
-        inst::InstructionType::AND => and(),
+        inst::InstructionType::AND => and(con),
         inst::InstructionType::ANE => illegal_opcode(),
         inst::InstructionType::ALR => illegal_opcode(), //illegal
         inst::InstructionType::ARR => illegal_opcode(),
-        inst::InstructionType::ASL => asl(),
-        inst::InstructionType::BCC => bcc(),
-        inst::InstructionType::BCS => bcs(),
-        inst::InstructionType::BEQ => beq(),
-        inst::InstructionType::BIT => bit(),
+        inst::InstructionType::ASL => asl(con),
+        inst::InstructionType::BCC => bcc(con),
+        inst::InstructionType::BCS => bcs(con),
+        inst::InstructionType::BEQ => beq(con),
+        inst::InstructionType::BIT => bit(con),
         inst::InstructionType::BMI => bmi(),
         inst::InstructionType::BNE => bne(),
-        inst::InstructionType::BPL => bpl(),
+        inst::InstructionType::BPL => bpl(con),
         inst::InstructionType::BRK => brk(con),
         inst::InstructionType::BVC => bvc(),
         inst::InstructionType::BVS => bvs(),

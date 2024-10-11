@@ -2,8 +2,7 @@ use cpuproc::CpuExecution;
 
 
 pub mod cpu;
-#[path = "cpuproc.rs"] pub mod cpuproc;
-#[path = "cpuflags.rs"] pub mod cpuflags; 
+#[path = "cpuproc.rs"] pub mod cpuproc; 
 #[path = "instruction.rs"] pub mod instruction; 
 
 
