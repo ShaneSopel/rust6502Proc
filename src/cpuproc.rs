@@ -260,8 +260,7 @@ fn asl(con: &mut CpuExecution) -> u8
     let nval : bool = (con.rt_ac  & 0x80) == 1;
     set_flag(CondType::CtN, nval, con);
 
-    let cval : bool = (temp & 0xFF00) > 0;
-    set_flag(CondType::CtC, cval, con);
+    //set_flag(CondType::CtC, (temp & 0xFF00) > 0, con);
 
     // add more logic
 
@@ -379,55 +378,103 @@ fn bpl(con: &mut CpuExecution) -> u8
 
 }
 
-fn bmi() -> u8
+fn bmi(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    if get_flag(CondType::CtN, con) == 1
+    {
+        con.cycles= con.cycles + 1;
+        con.addr_abs =  con.rt_pc + con.addr_rel;
+
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
+        {
+            con.cycles = con.cycles + 1;
+        }
+
+        con.rt_pc = con.addr_abs;
+    }
+    return 0;
+}
+
+fn bne(con: &mut CpuExecution) -> u8
+{
+    if get_flag(CondType::CtZ, con) == 0
+    {
+        con.cycles= con.cycles + 1;
+        con.addr_abs =  con.rt_pc + con.addr_rel;
+
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
+        {
+            con.cycles = con.cycles + 1;
+        }
+
+        con.rt_pc = con.addr_abs;
+    }
+    return 0;
 
 }
 
-fn bne() -> u8
+fn bvc(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    if get_flag(CondType::CtV, con) == 0
+    {
+        con.cycles= con.cycles + 1;
+        con.addr_abs =  con.rt_pc + con.addr_rel;
+
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
+        {
+            con.cycles = con.cycles + 1;
+        }
+
+        con.rt_pc = con.addr_abs;
+    }
+    return 0;
 
 }
 
-fn bvc() -> u8
+fn bvs(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    if get_flag(CondType::CtV, con) == 1
+    {
+        con.cycles= con.cycles + 1;
+        con.addr_abs =  con.rt_pc + con.addr_rel;
 
-}
+        if(con.addr_abs & 0xFF00) != (con.rt_pc & 0xFF00)
+        {
+            con.cycles = con.cycles + 1;
+        }
 
-fn bvs() -> u8
-{
-    return 1;
-
-}
-
-fn clc() -> u8
-{
-    return 1;
-
-}
-
-fn cld() -> u8
-{
+        con.rt_pc = con.addr_abs;
+    }
     return 1;
 }
 
-fn cli() -> u8
+fn clc(con: &mut CpuExecution) -> u8
 {
-    return 1;
-
+    set_flag(CondType::CtC, false, con);
+    return 0;
 }
 
-fn clv() -> u8
+fn cld(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    set_flag(CondType::CtD, false, con);
+    return 0;
+}
 
+fn cli(con: &mut CpuExecution) -> u8
+{
+    set_flag(CondType::CtI, false, con);
+    return 0;
+}
+
+fn clv(con: &mut CpuExecution) -> u8
+{
+    set_flag(CondType::CtV, false, con);
+    return 0;
 }
 
 fn cmp() -> u8
 {
+
     return 1;
 
 }
@@ -450,15 +497,29 @@ fn dec() -> u8
 
 }
 
-fn dex() -> u8
+fn dex(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_x = con.rt_x - 1;
 
+    let zval : bool = (con.rt_x == 0x00) == true;
+    set_flag(CondType::CtZ, zval,con);
+
+    let nval : bool = (con.rt_ac & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+    return 0;
+    
 }
 
-fn dey() -> u8
+fn dey(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_y = con.rt_y - 1;
+
+    let zval : bool = (con.rt_y == 0x00) == true;
+    set_flag(CondType::CtZ, zval,con);
+
+    let nval : bool = (con.rt_ac & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+    return 0;
 }
 
 fn eor() -> u8
@@ -471,19 +532,34 @@ fn inc() -> u8
     return 1;
 }
 
-fn inx() -> u8
+fn inx(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_x = con.rt_x + 1;
+    
+    let zval : bool = (con.rt_x == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_x & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+    return 0;
 }
 
-fn iny() -> u8
+fn iny(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_y = con.rt_y + 1;
+    
+    let zval : bool = (con.rt_y == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_y & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+    return 0;
 }
 
-fn jmp() -> u8
+fn jmp(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_pc = con.addr_abs;
+    return 0;
 }
 
 fn jsr() -> u8
@@ -492,18 +568,40 @@ fn jsr() -> u8
 }
 
 
-fn lda() -> u8
+fn lda(con: &mut CpuExecution) -> u8
 {
+    con.rt_ac = con.fetch;
+
+    let zval : bool = (con.rt_ac == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_ac & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+
     return 1;
 }
 
-fn ldx() -> u8
+fn ldx(con: &mut CpuExecution) -> u8
 {
+    con.rt_x = con.fetch;
+
+    let zval : bool = (con.rt_ac == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_ac & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
     return 1;
 }
 
-fn ldy() -> u8
+fn ldy(con: &mut CpuExecution) -> u8
 {
+    con.rt_y = con.fetch;
+
+    let zval : bool = (con.rt_ac == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_ac & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
     return 1;
 }
 
@@ -563,66 +661,111 @@ fn sbc() -> u8
     return 1;
 }
 
-fn sec() -> u8
+fn sec(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    set_flag(CondType::CtC, true, con);
+    return 0;
 }
 
-fn sed() -> u8
+fn sed(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    set_flag(CondType::CtD, true, con);
+    return 0;
 }
 
-fn sei() -> u8
+fn sei(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    set_flag(CondType::CtI, true, con);
+    return 0;
 }
 
-fn sta() -> u8
+fn sta(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    cpu_write(con.addr_abs, con.rt_ac);
+    return 0;
 }
 
-fn stx() -> u8
+fn stx(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    cpu_write(con.addr_abs, con.rt_x);
+    return 0;
 }
 
-fn sty() -> u8
+fn sty(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    cpu_write(con.addr_abs, con.rt_y);
+    return 0;
 }
 
-fn tax() -> u8
+fn tax(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_x = con.rt_ac;
+    
+    let zval : bool = (con.rt_x == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_x & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+
+    return 0;
 }
 
-fn tay() -> u8
+fn tay(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_y = con.rt_ac;
+    
+    let zval : bool = (con.rt_y == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_y & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+
+    return 0;
 }
 
-fn tsx() -> u8
-{
-    return 1;
+fn tsx(con: &mut CpuExecution) -> u8
+{  
+    con.rt_x = con.rt_sp;
+    
+    let zval : bool = (con.rt_x == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_x & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+
+    return 0;
 }
 
-fn txa() -> u8
+fn txa(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_ac = con.rt_x;
 
+    let zval : bool = (con.rt_ac == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_ac & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+
+    return 0;
 }
 
-fn txs() -> u8
+fn txs(con: &mut CpuExecution) -> u8
 {
-    return 1;
-
+    con.rt_sp = con.rt_x;
+    return 0;
 }
 
-fn tya() -> u8
+fn tya(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_ac = con.rt_y;
+
+    let zval : bool = (con.rt_ac == 0x00);
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (con.rt_ac & 0x80) == 1;
+    set_flag(CondType::CtN, nval, con);
+
+    return 0;
 
 }
 
@@ -680,36 +823,36 @@ pub fn match_process(inst_type: &inst::InstructionType, con: &mut CpuExecution) 
         inst::InstructionType::BCS => bcs(con),
         inst::InstructionType::BEQ => beq(con),
         inst::InstructionType::BIT => bit(con),
-        inst::InstructionType::BMI => bmi(),
-        inst::InstructionType::BNE => bne(),
+        inst::InstructionType::BMI => bmi(con),
+        inst::InstructionType::BNE => bne(con),
         inst::InstructionType::BPL => bpl(con),
         inst::InstructionType::BRK => brk(con),
-        inst::InstructionType::BVC => bvc(),
-        inst::InstructionType::BVS => bvs(),
-        inst::InstructionType::CLC => clc(),
-        inst::InstructionType::CLD => cld(),
-        inst::InstructionType::CLI => cli(),
-        inst::InstructionType::CLV => clv(),
+        inst::InstructionType::BVC => bvc(con),
+        inst::InstructionType::BVS => bvs(con),
+        inst::InstructionType::CLC => clc(con),
+        inst::InstructionType::CLD => cld(con),
+        inst::InstructionType::CLI => cli(con),
+        inst::InstructionType::CLV => clv(con),
         inst::InstructionType::CMP => cmp(),
         inst::InstructionType::CPX => cpx(),
         inst::InstructionType::CPY => cpy(),
         inst::InstructionType::DCP => illegal_opcode(),
         inst::InstructionType::DEC => dec(),
-        inst::InstructionType::DEX => dex(),
-        inst::InstructionType::DEY => dey(),
+        inst::InstructionType::DEX => dex(con),
+        inst::InstructionType::DEY => dey(con),
         inst::InstructionType::EOR => eor(),
         inst::InstructionType::INC => inc(),
-        inst::InstructionType::INX => inx(),
-        inst::InstructionType::INY => iny(),
+        inst::InstructionType::INX => inx(con),
+        inst::InstructionType::INY => iny(con),
         inst::InstructionType::ISC => illegal_opcode(),
         inst::InstructionType::JAM => illegal_opcode(),
-        inst::InstructionType::JMP => jmp(),
+        inst::InstructionType::JMP => jmp(con),
         inst::InstructionType::JSR => jsr(),
         inst::InstructionType::LAS => illegal_opcode(),
         inst::InstructionType::LAX => illegal_opcode(),
-        inst::InstructionType::LDA => lda(),
-        inst::InstructionType::LDX => ldx(),
-        inst::InstructionType::LDY => ldy(),
+        inst::InstructionType::LDA => lda(con),
+        inst::InstructionType::LDX => ldx(con),
+        inst::InstructionType::LDY => ldy(con),
         inst::InstructionType::LSR => lsr(),
         inst::InstructionType::LXA => illegal_opcode(),
         inst::InstructionType::NOP => illegal_opcode(),
@@ -727,24 +870,24 @@ pub fn match_process(inst_type: &inst::InstructionType, con: &mut CpuExecution) 
         inst::InstructionType::SAX => illegal_opcode(),
         inst::InstructionType::SBC => sbc(),
         inst::InstructionType::SBX => illegal_opcode(),
-        inst::InstructionType::SEC => sec(),
-        inst::InstructionType::SED => sed(),
-        inst::InstructionType::SEI => sei(),
+        inst::InstructionType::SEC => sec(con),
+        inst::InstructionType::SED => sed(con),
+        inst::InstructionType::SEI => sei(con),
         inst::InstructionType::SHA => illegal_opcode(),
         inst::InstructionType::SHX => illegal_opcode(),
         inst::InstructionType::SHY => illegal_opcode(),
         inst::InstructionType::SLO => illegal_opcode(),
         inst::InstructionType::SRE => illegal_opcode(),
-        inst::InstructionType::STA => sta(),
-        inst::InstructionType::STX => stx(),
-        inst::InstructionType::STY => sty(),
+        inst::InstructionType::STA => sta(con),
+        inst::InstructionType::STX => stx(con),
+        inst::InstructionType::STY => sty(con),
         inst::InstructionType::TAS => illegal_opcode(),
-        inst::InstructionType::TAX => tax(),
-        inst::InstructionType::TAY => tay(),
-        inst::InstructionType::TSX => tsx(),
-        inst::InstructionType::TXA => txa(),
-        inst::InstructionType::TXS => txs(),
-        inst::InstructionType::TYA => tya(),
+        inst::InstructionType::TAX => tax(con),
+        inst::InstructionType::TAY => tay(con),
+        inst::InstructionType::TSX => tsx(con),
+        inst::InstructionType::TXA => txa(con),
+        inst::InstructionType::TXS => txs(con),
+        inst::InstructionType::TYA => tya(con),
         inst::InstructionType::USBC => illegal_opcode()
     }
 }
