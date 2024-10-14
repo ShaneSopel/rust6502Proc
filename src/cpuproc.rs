@@ -690,28 +690,53 @@ fn nop() -> u8
 
 fn ora(con: &mut CpuExecution) -> u8
 {
+    con.rt_ac = con.rt_ac | con.fetch;
+
+    let zval : bool = con.rt_ac == 0x00;
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = con.rt_ac & 0x80 == 1;
+    set_flag(CondType::CtN, nval, con);
 
     return 1;
 } 
 
 fn pla(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_sp = con.rt_sp + 1;
+    con.rt_ac = cpu_read(0x0100 + con.rt_sp);
+
+    let zval : bool = con.rt_ac == 0x00;
+    set_flag( CondType::CtZ, zval, con);
+
+    let nval : bool = con.rt_ac & 0x80 == 1;
+    set_flag(CondType::CtN, nval, con);
+
+    return 0;
 }
 
 fn pha(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    cpu_write(0x0100 +  con.rt_sp as u16, con.rt_ac);
+    con.rt_sp = con.rt_sp - 1;
+    return 0;
+  
 }
 
 fn php(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    cpu_write(0x0100 +  con.rt_sp as u16, con.rt_sr | CondType::CtB | CondType::CtNone);
+    set_flag(CondType::CtB, false, con);
+    set_flag(CondType::CtNone, false, con);
+    return 0;
 }
 
 fn plp(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_sp = con.rt_sp + 1;
+    con.rt_sr = cpu_read(0x0100 + con.rt_sp as u16);
+    set_flag(CondType::CtNone, true, con);
+    return 0;
 }
 
 fn rol(con: &mut CpuExecution) -> u8
@@ -935,7 +960,7 @@ pub fn match_process(inst_type: &inst::InstructionType, con: &mut CpuExecution) 
         inst::InstructionType::LSR => lsr(),
         inst::InstructionType::LXA => illegal_opcode(),
         inst::InstructionType::NOP => nop(),
-        inst::InstructionType::ORA => ora(),
+        inst::InstructionType::ORA => ora(con),
         inst::InstructionType::PHA => pha(),
         inst::InstructionType::PHP => php(),
         inst::InstructionType::PLA => pla(),
