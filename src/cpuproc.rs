@@ -741,23 +741,82 @@ fn plp(con: &mut CpuExecution) -> u8
 
 fn rol(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let temp : u16 = (con.fetch << 1) | get_flag(CondType::CtC, con);
+
+    let cval : bool = temp & 0xFF00;
+    set_flag(CondType::CtC, cval, con);
+
+    let zval : bool = (temp & 0x00FF) == 0x0000;
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (temp & 0x0080);
+    set_flag(CondType::CtZ, zval, con);
+
+    if (inst::AddrMode == implied_addr(con))
+    {
+        con.rt_ac = temp & 0x00FF;
+
+    }
+
+    else 
+    {
+        cpu_write(con.addr_abs, temp & 0x00FF);
+    }
+
+    return 0;
+
 }
 
 fn ror(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    let temp : u16 = get_flag(CondType::CtC, con) << 7 | (con.fetch >> 1) ;
+
+    let cval : bool = con.fetch & 0x01;
+    set_flag(CondType::CtC, cval, con);
+
+    let zval : bool = (temp & 0x00FF) == 0x00;
+    set_flag(CondType::CtZ, zval, con);
+
+    let nval : bool = (temp & 0x0080);
+    set_flag(CondType::CtZ, zval, con);
+
+    if (inst::AddrMode == implied_addr(con))
+    {
+        con.rt_ac = temp & 0x00FF;
+
+    }
+
+    else 
+    {
+        cpu_write(con.addr_abs, temp & 0x00FF);
+    }
+
+    return 0;
 }
 
 fn rti(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_sp = con.rt_sp + 1;
+    con.rt_sr = cpu_read(0x0100 + con.rt_sp);
+    con.rt_sr &= !CondType::CtB;
+    con.rt_sr &= !CondType::CtNone;
+
+    con.rt_sp = con.rt_sp + 1;
+    con.rt_pc = cpu_read(0x100 + con.rt_sp);
+    con.rt_sp = con.rt_sp + 1;
+    con.rt_pc = cpu_read(0x100 + con.rt_sp) << 8;
+    return 0;
 }
 
 fn rts(con: &mut CpuExecution) -> u8
 {
-    return 1;
+    con.rt_sp = con.rt_sp + 1;
+    con.rt_sr = cpu_read(0x0100 + con.rt_sp);
+    con.rt_sp = con.rt_sp + 1;
+    con.rt_pc |= cpu_read(0x0100 + con.rt_sp) << 8;
 
+    con.rt_pc = con.rt_pc + 1;
+    return 0;
 }
 
 fn sbc(con: &mut CpuExecution) -> u8
