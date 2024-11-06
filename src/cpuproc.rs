@@ -1,7 +1,7 @@
 #[path = "instruction.rs"] pub mod instruction;
 #[path = "cpu.rs"] pub mod cpu;
 
-use cpu::{cpu_read, cpu_write};
+use cpu::{cpu_read, cpu_read_u8, cpu_write};
 
 use crate::cpuproc::instruction as inst;
 use crate::cpu::SystemState;
@@ -616,9 +616,9 @@ fn jsr(con: &mut CpuExecution) -> u8
 
     con.rt_pc = con.rt_pc - 1;
 
-    cpu_write((0x100 + con.rt_sp) as u16, ((con.rt_pc >> 8) & 0x00FF));
+    cpu_write((0x100 + con.rt_sp) as u16, ((con.rt_pc >> 8) & 0x00FF) as u8);
     con.rt_sp = con.rt_sp - 1;
-    cpu_write((0x100 + con.rt_sp) as u16, ((con.rt_pc as u16) & 0x00FF));
+    cpu_write((0x100 + con.rt_sp) as u16, ((con.rt_pc as u16) & 0x00FF) as u8);
     con.rt_sp = con.rt_sp - 1;
 
     con.rt_pc = con.addr_abs;
@@ -704,7 +704,7 @@ fn ora(con: &mut CpuExecution) -> u8
 fn pla(con: &mut CpuExecution) -> u8
 {
     con.rt_sp = con.rt_sp + 1;
-    con.rt_ac = cpu_read(0x0100 + con.rt_sp);
+    con.rt_ac = cpu_read_u8(0x0100 + con.rt_sp);
 
     let zval : bool = con.rt_ac == 0x00;
     set_flag( CondType::CtZ, zval, con);
@@ -734,7 +734,8 @@ fn php(con: &mut CpuExecution) -> u8
 fn plp(con: &mut CpuExecution) -> u8
 {
     con.rt_sp = con.rt_sp + 1;
-    con.rt_sr = cpu_read(0x0100 + con.rt_sp as u16);
+    con.rt_sr = cpu_read_u8(0x0100
+         + con.rt_sp);
     set_flag(CondType::CtNone, true, con);
     return 0;
 }
@@ -743,24 +744,24 @@ fn rol(con: &mut CpuExecution) -> u8
 {
     let temp : u16 = (con.fetch << 1) | get_flag(CondType::CtC, con);
 
-    let cval : bool = temp & 0xFF00;
+    let cval : bool = (temp as u8) == 0x0001;
     set_flag(CondType::CtC, cval, con);
 
-    let zval : bool = (temp & 0x00FF) == 0x0000;
+    let zval : bool = (temp as u8) == 0x0000;
     set_flag(CondType::CtZ, zval, con);
 
-    let nval : bool = (temp & 0x0080);
+    let nval : bool = (temp & 0x0080) == 1;
     set_flag(CondType::CtZ, zval, con);
 
     if (inst::AddrMode == implied_addr(con))
     {
-        con.rt_ac = temp & 0x00FF;
+        con.rt_ac = temp as u8;
 
     }
 
     else 
     {
-        cpu_write(con.addr_abs, temp & 0x00FF);
+        cpu_write(con.addr_abs, temp as u8);
     }
 
     return 0;
@@ -771,10 +772,10 @@ fn ror(con: &mut CpuExecution) -> u8
 {
     let temp : u16 = get_flag(CondType::CtC, con) << 7 | (con.fetch >> 1) ;
 
-    let cval : bool = con.fetch & 0x01;
+    let cval : bool = (con.fetch & 0x01);
     set_flag(CondType::CtC, cval, con);
 
-    let zval : bool = (temp & 0x00FF) == 0x00;
+    let zval : bool = (temp as u8) == 0x00;
     set_flag(CondType::CtZ, zval, con);
 
     let nval : bool = (temp & 0x0080);
@@ -782,13 +783,13 @@ fn ror(con: &mut CpuExecution) -> u8
 
     if (inst::AddrMode == implied_addr(con))
     {
-        con.rt_ac = temp & 0x00FF;
+        con.rt_ac = temp as u8;
 
     }
 
     else 
     {
-        cpu_write(con.addr_abs, temp & 0x00FF);
+        cpu_write(con.addr_abs, temp as u8);
     }
 
     return 0;
@@ -797,23 +798,23 @@ fn ror(con: &mut CpuExecution) -> u8
 fn rti(con: &mut CpuExecution) -> u8
 {
     con.rt_sp = con.rt_sp + 1;
-    con.rt_sr = cpu_read(0x0100 + con.rt_sp);
-    con.rt_sr &= !CondType::CtB;
-    con.rt_sr &= !CondType::CtNone;
+    con.rt_sr = cpu_read_u8(0x0100 + con.rt_sp);
+    //con.rt_sr &= !CondType::CtB;
+    //con.rt_sr &= !CondType::CtNone;
 
     con.rt_sp = con.rt_sp + 1;
-    con.rt_pc = cpu_read(0x100 + con.rt_sp);
+    con.rt_pc = cpu_read(0x100 + con.rt_sp as u16);
     con.rt_sp = con.rt_sp + 1;
-    con.rt_pc = cpu_read(0x100 + con.rt_sp) << 8;
+    con.rt_pc = cpu_read(0x100 + con.rt_sp as u16) << 8;
     return 0;
 }
 
 fn rts(con: &mut CpuExecution) -> u8
 {
     con.rt_sp = con.rt_sp + 1;
-    con.rt_sr = cpu_read(0x0100 + con.rt_sp);
+    con.rt_sr = cpu_read_u8(0x0100 + con.rt_sp);
     con.rt_sp = con.rt_sp + 1;
-    con.rt_pc |= cpu_read(0x0100 + con.rt_sp) << 8;
+    con.rt_pc |= (cpu_read_u8(0x0100 + con.rt_sp) << 8) as u16;
 
     con.rt_pc = con.rt_pc + 1;
     return 0;
@@ -1016,22 +1017,22 @@ pub fn match_process(inst_type: &inst::InstructionType, con: &mut CpuExecution) 
         inst::InstructionType::LDA => lda(con),
         inst::InstructionType::LDX => ldx(con),
         inst::InstructionType::LDY => ldy(con),
-        inst::InstructionType::LSR => lsr(),
+        inst::InstructionType::LSR => lsr(con),
         inst::InstructionType::LXA => illegal_opcode(),
         inst::InstructionType::NOP => nop(),
         inst::InstructionType::ORA => ora(con),
-        inst::InstructionType::PHA => pha(),
-        inst::InstructionType::PHP => php(),
-        inst::InstructionType::PLA => pla(),
-        inst::InstructionType::PLP => plp(),
+        inst::InstructionType::PHA => pha(con),
+        inst::InstructionType::PHP => php(con),
+        inst::InstructionType::PLA => pla(con),
+        inst::InstructionType::PLP => plp(con),
         inst::InstructionType::RLA => illegal_opcode(),
-        inst::InstructionType::ROL => rol(),
-        inst::InstructionType::ROR => ror(),
+        inst::InstructionType::ROL => rol(con),
+        inst::InstructionType::ROR => ror(con),
         inst::InstructionType::RRA => illegal_opcode(),
-        inst::InstructionType::RTI => rti(),
-        inst::InstructionType::RTS => rts(),
+        inst::InstructionType::RTI => rti(con),
+        inst::InstructionType::RTS => rts(con),
         inst::InstructionType::SAX => illegal_opcode(),
-        inst::InstructionType::SBC => sbc(),
+        inst::InstructionType::SBC => sbc(con),
         inst::InstructionType::SBX => illegal_opcode(),
         inst::InstructionType::SEC => sec(con),
         inst::InstructionType::SED => sed(con),

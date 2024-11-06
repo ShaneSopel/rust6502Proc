@@ -48,6 +48,15 @@ pub fn cpu_read(addr: u16) -> u16
     return 0x00;
 }
 
+pub fn cpu_read_u8(addr: u8) -> u8
+{
+    if addr >= 0x0000 && addr <= 0xFFFF
+    {
+        return addr;
+    }
+    return 0x00;
+}
+
 pub fn cpu_write(addr: u16, data: u8) -> u8
 {
     if addr >= 0x0000 && addr <= 0xFFFF
